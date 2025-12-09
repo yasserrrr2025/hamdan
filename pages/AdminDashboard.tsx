@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Request, Stats, RequestStatus, User, Agency, Service, Message } from '../types';
+import { Request, Stats, RequestStatus, User, Agency, Service, Message, UserRole } from '../types';
 import { dataService } from '../services/dataService';
 import { STATUS_COLORS, ICONS } from '../constants';
 import { 
@@ -20,7 +20,9 @@ import {
   Pencil,
   MessageSquare,
   Send,
-  Layers
+  Layers,
+  Phone,
+  Mail
 } from 'lucide-react';
 
 interface AdminDashboardProps {
@@ -28,7 +30,7 @@ interface AdminDashboardProps {
 }
 
 const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
-  const [activeTab, setActiveTab] = useState<'requests' | 'agencies' | 'services'>('requests');
+  const [activeTab, setActiveTab] = useState<'requests' | 'agencies' | 'services' | 'users'>('requests');
   const [loading, setLoading] = useState(true);
 
   // Data States
@@ -36,6 +38,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
   const [requests, setRequests] = useState<Request[]>([]);
   const [agencies, setAgencies] = useState<Agency[]>([]);
   const [services, setServices] = useState<Service[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
 
   // Filter State
   const [filter, setFilter] = useState('all');
@@ -65,11 +68,13 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
     const requestsData = await dataService.getAllRequests();
     const agenciesData = await dataService.getAgencies();
     const servicesData = await dataService.getAllServices();
+    const usersData = await dataService.getAllProfiles();
     
     setStats(statsData);
     setRequests(requestsData);
     setAgencies(agenciesData);
     setServices(servicesData);
+    setUsers(usersData);
     setLoading(false);
   };
 
@@ -251,6 +256,12 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
           label="إدارة الطلبات" 
         />
         <TabButton 
+          active={activeTab === 'users'} 
+          onClick={() => setActiveTab('users')} 
+          icon={Users} 
+          label="العملاء المسجلين" 
+        />
+        <TabButton 
           active={activeTab === 'services'} 
           onClick={() => setActiveTab('services')} 
           icon={Briefcase} 
@@ -313,6 +324,74 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                       </td>
                     </tr>
                   ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* Users Tab (NEW) */}
+        {activeTab === 'users' && (
+          <div className="p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="font-bold text-lg text-slate-800">العملاء المسجلين ({users.length})</h2>
+              <div className="relative md:w-64">
+                <input type="text" placeholder="بحث باسم العميل..." className="w-full pl-4 pr-10 py-2 border border-slate-300 rounded-lg text-sm" />
+                <Search size={16} className="absolute right-3 top-2.5 text-slate-400" />
+              </div>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-right">
+                <thead className="bg-slate-50 text-slate-500 text-sm">
+                  <tr>
+                    <th className="px-6 py-4 font-medium">العميل</th>
+                    <th className="px-6 py-4 font-medium">وسائل التواصل</th>
+                    <th className="px-6 py-4 font-medium">الصلاحية</th>
+                    <th className="px-6 py-4 font-medium">حالة الحساب</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {users.map((u) => (
+                    <tr key={u.id} className="hover:bg-slate-50 transition">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <img src={u.avatar} alt={u.name} className="w-10 h-10 rounded-full bg-slate-100 border border-slate-200" />
+                          <div>
+                            <p className="font-bold text-slate-800 text-sm">{u.name}</p>
+                            <p className="text-[10px] text-slate-400 font-mono">{u.id.split('-')[0]}...</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col gap-1">
+                          <div className="flex items-center gap-2 text-slate-600 text-xs">
+                             <Phone size={14} className="text-slate-400"/> {u.phone || 'غير مسجل'}
+                          </div>
+                          <div className="flex items-center gap-2 text-slate-600 text-xs">
+                             <Mail size={14} className="text-slate-400"/> {u.email || 'مخفي'}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`px-2 py-1 rounded text-xs font-medium border ${
+                          u.role === UserRole.ADMIN ? 'bg-purple-50 text-purple-700 border-purple-200' : 'bg-blue-50 text-blue-700 border-blue-200'
+                        }`}>
+                          {u.role === UserRole.ADMIN ? 'مدير نظام' : 'عميل'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="flex items-center gap-1 text-green-600 text-xs font-medium">
+                          <CheckCircle size={14} /> نشط
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                  {users.length === 0 && (
+                     <tr>
+                       <td colSpan={4} className="text-center py-8 text-slate-400">لا يوجد عملاء مسجلين حالياً</td>
+                     </tr>
+                  )}
                 </tbody>
               </table>
             </div>

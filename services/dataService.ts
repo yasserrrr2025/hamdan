@@ -53,6 +53,30 @@ export const dataService = {
     if (error) throw error;
   },
 
+  // --- Users (Admin) ---
+  getAllProfiles: async (): Promise<User[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      
+      return (data || []).map((p: any) => ({
+        id: p.id,
+        name: p.name || 'مستخدم',
+        email: p.email || 'غير متوفر', // يتطلب إضافة عمود email لجدول profiles
+        phone: p.phone || '',
+        role: p.role as UserRole,
+        avatar: p.avatar
+      }));
+    } catch (e: any) {
+      console.warn("Error fetching profiles", e.message || e);
+      return [];
+    }
+  },
+
   // --- Agencies ---
   getAgencies: async (): Promise<Agency[]> => {
     try {
