@@ -3,9 +3,6 @@ import { createClient } from '@supabase/supabase-js';
 
 // تم تحديث الرابط والمفتاح بناءً على البيانات المزودة
 const supabaseUrl = 'https://hwunsbzyjabdfxpcqwij.supabase.co';
-// ملاحظة: يبدو أن المفتاح المزود هو مفتاح خاص أو بصيغة غير معتادة (sb_secret).
-// عادةً ما يبدأ المفتاح العام بـ eyJ...، ولكن سنستخدم ما تم تزويده.
-// إذا واجهت مشاكل في الاتصال، يرجى التأكد من نسخ مفتاح 'anon' / 'public' من إعدادات API.
-const supabaseKey = 'sb_secret_5GrzA_Jg-4oRnS0aY2fKnA_SVawL9hY';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh3dW5zYnp5amFiZGZ4cGNxd2lqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUyMzAxMDksImV4cCI6MjA4MDgwNjEwOX0.-zB-c_OLdpA1xN3dZEZvLnWLk-dq65ShscKBjlKHHFs';
 
 export const supabase = createClient(supabaseUrl, supabaseKey);

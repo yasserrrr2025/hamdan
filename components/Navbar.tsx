@@ -1,16 +1,23 @@
+
 import React from 'react';
 import { User, UserRole } from '../types';
-import { LogOut, User as UserIcon, ShieldCheck, Briefcase } from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
+import { LogOut, User as UserIcon, ShieldCheck } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 interface NavbarProps {
   user: User | null;
   onLogout: () => void;
-  onSwitchRole: () => void;
+  onSwitchRole: () => void; // Kept for interface compatibility but not used directly
 }
 
-const Navbar: React.FC<NavbarProps> = ({ user, onLogout, onSwitchRole }) => {
+const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
   const location = useLocation();
+  const navigate = useNavigate();
+
+  // Hide Navbar on Login/Register pages
+  if (['/login', '/register'].includes(location.pathname)) {
+    return null;
+  }
 
   return (
     <nav className="bg-white text-primary-900 shadow-md sticky top-0 z-50 border-b border-gold-200">
@@ -42,20 +49,24 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout, onSwitchRole }) => {
           {/* User Section */}
           <div className="flex items-center gap-3">
             {!user ? (
-               <button onClick={onSwitchRole} className="bg-gold-500 hover:bg-gold-600 text-white px-6 py-2.5 rounded-lg transition text-sm font-bold shadow-md shadow-gold-200">
-                 تسجيل الدخول
-               </button>
+               <div className="flex gap-2">
+                 <Link to="/login" className="px-4 py-2 text-primary-900 font-bold hover:bg-slate-50 rounded-lg transition text-sm">
+                   دخول
+                 </Link>
+                 <Link to="/register" className="bg-gold-500 hover:bg-gold-600 text-white px-5 py-2 rounded-lg transition text-sm font-bold shadow-md shadow-gold-200">
+                   حساب جديد
+                 </Link>
+               </div>
             ) : (
               <div className="flex items-center gap-3">
-                <button 
-                  onClick={onSwitchRole}
-                  className="hidden md:flex items-center gap-1 text-[10px] bg-slate-100 hover:bg-slate-200 px-3 py-1 rounded-full text-slate-500 border border-slate-200"
-                  title="Demo only"
+                 <button 
+                  onClick={onLogout}
+                  className="text-slate-400 hover:text-red-500 transition p-2"
+                  title="تسجيل الخروج"
                 >
-                  <ShieldCheck size={12} />
-                  {user.role === UserRole.CLIENT ? 'مدير' : 'عميل'}
+                  <LogOut size={20} className="rtl:rotate-180" />
                 </button>
-                
+                <div className="h-8 w-px bg-slate-200 mx-2"></div>
                 <div className="flex items-center gap-3 pl-2">
                   <div className="flex flex-col text-left">
                     <span className="text-sm font-bold text-primary-900">{user.name}</span>
