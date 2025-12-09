@@ -67,13 +67,34 @@ const App: React.FC = () => {
           </Routes>
         </main>
 
-        <footer className="bg-white border-t border-slate-200 py-8 mt-auto">
-          <div className="max-w-7xl mx-auto px-4 text-center text-slate-500 text-sm">
-            <p className="mb-2">© 2023 إنجاز للخدمات العامة. جميع الحقوق محفوظة.</p>
-            <div className="flex justify-center gap-4 mt-4">
-              <a href="#" className="hover:text-primary-600 transition">سياسة الخصوصية</a>
-              <a href="#" className="hover:text-primary-600 transition">الشروط والأحكام</a>
-              <a href="#" className="hover:text-primary-600 transition">اتصل بنا</a>
+        <footer className="bg-primary-900 text-slate-300 py-12 mt-auto border-t-4 border-gold-500">
+          <div className="max-w-7xl mx-auto px-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8 text-center md:text-right">
+              <div>
+                <h3 className="text-white font-bold text-lg mb-4">حمدان للخدمات العامة</h3>
+                <p className="text-sm opacity-80 leading-relaxed">
+                  شريكك الموثوق لتخليص كافة المعاملات الحكومية والتعقيب. دقة، سرعة، وأمانة في العمل.
+                </p>
+              </div>
+              <div>
+                <h3 className="text-white font-bold text-lg mb-4">روابط سريعة</h3>
+                <ul className="space-y-2 text-sm">
+                  <li><a href="#" className="hover:text-gold-400 transition">الرئيسية</a></li>
+                  <li><a href="#services" className="hover:text-gold-400 transition">الخدمات</a></li>
+                  <li><a href="#" className="hover:text-gold-400 transition">تتبع الطلب</a></li>
+                </ul>
+              </div>
+              <div>
+                <h3 className="text-white font-bold text-lg mb-4">تواصل معنا</h3>
+                <ul className="space-y-2 text-sm">
+                  <li>الرياض، المملكة العربية السعودية</li>
+                  <li>هاتف: 920000000</li>
+                  <li>بريد: info@hamdan-services.com</li>
+                </ul>
+              </div>
+            </div>
+            <div className="border-t border-primary-800 pt-8 text-center text-xs text-slate-500">
+              <p>© 2023 حمدان للخدمات العامة. جميع الحقوق محفوظة.</p>
             </div>
           </div>
         </footer>

@@ -1,93 +1,168 @@
-import { Agency, Service, Request, Message, User, RequestStatus } from '../types';
-import { AGENCIES, SERVICES, INITIAL_REQUESTS, INITIAL_MESSAGES } from './mockData';
 
-// Simulated latency
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
-// In-memory store for the session
-let requests = [...INITIAL_REQUESTS];
-let messages = [...INITIAL_MESSAGES];
+import { Agency, Service, Request, Message, RequestStatus } from '../types';
+import { supabase } from './supabaseClient';
+import { AGENCIES, SERVICES } from './mockData';
 
 export const dataService = {
   getAgencies: async (): Promise<Agency[]> => {
-    await delay(500);
-    return AGENCIES;
+    try {
+      const { data, error } = await supabase.from('agencies').select('*');
+      if (error) throw error;
+      if (!data || data.length === 0) return AGENCIES;
+      return data;
+    } catch (e) {
+      console.warn("Using mock agencies due to DB error or empty table:", e);
+      return AGENCIES;
+    }
   },
 
   getServicesByAgency: async (agencyId: string): Promise<Service[]> => {
-    await delay(300);
-    return SERVICES.filter(s => s.agency_id === agencyId);
+    const { data, error } = await supabase
+      .from('services')
+      .select('*')
+      .eq('agency_id', agencyId);
+    
+    if (error || !data) return [];
+    return data;
   },
 
   getAllServices: async (): Promise<Service[]> => {
-    await delay(300);
-    return SERVICES;
+    try {
+      const { data, error } = await supabase.from('services').select('*');
+      if (error) throw error;
+      if (!data || data.length === 0) return SERVICES;
+      return data;
+    } catch (e) {
+      console.warn("Using mock services due to DB error:", e);
+      return SERVICES;
+    }
   },
 
   getUserRequests: async (userId: string): Promise<Request[]> => {
-    await delay(500);
-    return requests.filter(r => r.user_id === userId);
+    const { data, error } = await supabase
+      .from('requests')
+      .select('*, service:services(title), profile:profiles(name)')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching user requests:', error);
+      return [];
+    }
+    
+    return (data || []).map((item: any) => ({
+      ...item,
+      service_title: item.service?.title,
+      user_name: item.profile?.name
+    }));
   },
 
   getAllRequests: async (): Promise<Request[]> => {
-    await delay(500);
-    return requests;
+    const { data, error } = await supabase
+      .from('requests')
+      .select('*, service:services(title), profile:profiles(name)')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching all requests:', error);
+      return [];
+    }
+
+    return (data || []).map((item: any) => ({
+      ...item,
+      service_title: item.service?.title,
+      user_name: item.profile?.name
+    }));
   },
 
   createRequest: async (userId: string, userName: string, service: Service, notes: string): Promise<Request> => {
-    await delay(1000);
-    const newRequest: Request = {
-      id: `req${Date.now()}`,
-      tracking_number: `REQ-${new Date().getFullYear()}-${Math.floor(Math.random() * 10000)}`,
-      user_id: userId,
-      user_name: userName,
-      service_id: service.id,
-      service_title: service.title,
-      status: RequestStatus.PENDING,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      notes
+    // Generate a simple tracking number for demo purposes
+    const trackingNumber = `REQ-${new Date().getFullYear()}-${Math.floor(Math.random() * 10000)}`;
+    
+    const { data, error } = await supabase
+      .from('requests')
+      .insert([
+        {
+          user_id: userId,
+          service_id: service.id,
+          status: RequestStatus.PENDING,
+          notes: notes,
+          tracking_number: trackingNumber,
+          updated_at: new Date().toISOString()
+        }
+      ])
+      .select('*, service:services(title)')
+      .single();
+
+    if (error) throw error;
+
+    return {
+      ...data,
+      service_title: data.service?.title,
+      user_name: userName
     };
-    requests = [newRequest, ...requests];
-    return newRequest;
   },
 
   updateRequestStatus: async (requestId: string, status: RequestStatus): Promise<void> => {
-    await delay(500);
-    requests = requests.map(r => r.id === requestId ? { ...r, status, updated_at: new Date().toISOString() } : r);
+    const { error } = await supabase
+      .from('requests')
+      .update({ status, updated_at: new Date().toISOString() })
+      .eq('id', requestId);
+    
+    if (error) throw error;
   },
 
   getMessages: async (requestId: string): Promise<Message[]> => {
-    await delay(300);
-    return messages.filter(m => m.request_id === requestId).sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+    const { data, error } = await supabase
+      .from('messages')
+      .select('*, profile:profiles(name)')
+      .eq('request_id', requestId)
+      .order('created_at', { ascending: true });
+
+    if (error) return [];
+
+    return (data || []).map((item: any) => ({
+      ...item,
+      sender_name: item.profile?.name
+    }));
   },
 
   sendMessage: async (requestId: string, senderId: string, senderName: string, content: string, isAdmin: boolean): Promise<Message> => {
-    await delay(300);
-    const newMessage: Message = {
-      id: `m${Date.now()}`,
-      request_id: requestId,
-      sender_id: senderId,
-      sender_name: senderName,
-      content,
-      created_at: new Date().toISOString(),
-      is_admin: isAdmin
+    const { data, error } = await supabase
+      .from('messages')
+      .insert([
+        {
+          request_id: requestId,
+          sender_id: senderId,
+          content,
+          is_admin: isAdmin
+        }
+      ])
+      .select('*, profile:profiles(name)')
+      .single();
+
+    if (error) throw error;
+
+    return {
+      ...data,
+      sender_name: senderName
     };
-    messages = [...messages, newMessage];
-    return newMessage;
   },
 
   getStats: async () => {
-    await delay(500);
+    const { data: requests, error } = await supabase
+      .from('requests')
+      .select('status, service:services(price)');
+      
+    if (error || !requests) return { totalRequests: 0, pendingRequests: 0, completedRequests: 0, revenue: 0 };
+
     return {
       totalRequests: requests.length,
-      pendingRequests: requests.filter(r => r.status === RequestStatus.PENDING).length,
-      completedRequests: requests.filter(r => r.status === RequestStatus.COMPLETED).length,
-      revenue: requests.filter(r => r.status === RequestStatus.COMPLETED)
-        .reduce((sum, req) => {
-          const service = SERVICES.find(s => s.id === req.service_id);
-          return sum + (service?.price || 0);
-        }, 0)
+      pendingRequests: requests.filter((r: any) => r.status === RequestStatus.PENDING).length,
+      completedRequests: requests.filter((r: any) => r.status === RequestStatus.COMPLETED).length,
+      revenue: requests
+        .filter((r: any) => r.status === RequestStatus.COMPLETED)
+        .reduce((sum: number, r: any) => sum + (Number(r.service?.price) || 0), 0)
     };
   }
 };

@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>إنجاز | خدمات التعقيب الإلكترونية</title>
+    <title>حمدان للخدمات العامة | Hamdan Services</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script>
@@ -14,16 +14,32 @@
               sans: ['Cairo', 'sans-serif'],
             },
             colors: {
+              // Hamdan Brand Colors
               primary: {
-                50: '#f0fdf4',
-                100: '#dcfce7',
-                500: '#22c55e',
-                600: '#16a34a',
-                700: '#15803d',
-                900: '#14532d',
+                50: '#f0f6fa',
+                100: '#e1ecf4',
+                200: '#cce0ee',
+                300: '#9cc1df',
+                400: '#6ea3d2',
+                500: '#1e3a8a', // Deep Navy Blue (Main Brand Color)
+                600: '#172e6e',
+                700: '#132454',
+                800: '#112044',
+                900: '#0e1a38',
+              },
+              gold: {
+                50: '#fbf8eb',
+                100: '#f5edd1',
+                200: '#ebd6a3',
+                300: '#dfba73',
+                400: '#d4af37', // Brand Gold
+                500: '#b69125',
+                600: '#96721b',
+                700: '#7a5818',
               },
               secondary: {
                 900: '#0f172a',
+                800: '#1e293b',
               }
             }
           }
@@ -35,6 +51,12 @@
         font-family: 'Cairo', sans-serif;
         background-color: #f8fafc;
       }
+      .gold-gradient {
+        background: linear-gradient(135deg, #d4af37 0%, #b69125 100%);
+      }
+      .navy-gradient {
+        background: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%);
+      }
     </style>
   <script type="importmap">
 {
@@ -43,7 +65,8 @@
     "react-router-dom": "https://aistudiocdn.com/react-router-dom@^7.10.1",
     "react/": "https://aistudiocdn.com/react@^19.2.1/",
     "react": "https://aistudiocdn.com/react@^19.2.1",
-    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.556.0"
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.556.0",
+    "@supabase/supabase-js": "https://aistudiocdn.com/@supabase/supabase-js@^2.87.0"
   }
 }
 </script>

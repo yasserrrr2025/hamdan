@@ -22,9 +22,9 @@ export const ICONS: Record<string, React.ElementType> = {
 };
 
 export const STATUS_COLORS = {
-  'بانتظار المراجعة': 'bg-yellow-100 text-yellow-800 border-yellow-200',
-  'قيد التنفيذ': 'bg-blue-100 text-blue-800 border-blue-200',
-  'مكتمل': 'bg-green-100 text-green-800 border-green-200',
-  'مرفوض': 'bg-red-100 text-red-800 border-red-200',
-  'بانتظار العميل': 'bg-orange-100 text-orange-800 border-orange-200',
+  'بانتظار المراجعة': 'bg-amber-50 text-amber-700 border-amber-200', // Gold/Amber for pending
+  'قيد التنفيذ': 'bg-blue-50 text-blue-700 border-blue-200', // Blue for processing
+  'مكتمل': 'bg-emerald-50 text-emerald-700 border-emerald-200', // Emerald for success
+  'مرفوض': 'bg-red-50 text-red-700 border-red-200', // Red for rejection
+  'بانتظار العميل': 'bg-orange-50 text-orange-700 border-orange-200', // Orange for action required
 };

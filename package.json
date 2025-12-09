@@ -1,5 +1,5 @@
 {
-  "name": "إنجاز---مكتب-خدمات-إلكترونية",
+  "name": "حمدان-للخدمات-العامة",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -12,7 +12,8 @@
     "react-dom": "^19.2.1",
     "react-router-dom": "^7.10.1",
     "react": "^19.2.1",
-    "lucide-react": "^0.556.0"
+    "lucide-react": "^0.556.0",
+    "@supabase/supabase-js": "^2.87.0"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
