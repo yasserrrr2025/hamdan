@@ -28,22 +28,6 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     setLoading(true);
 
     try {
-      // For demo purposes, checking the static admin credentials or using Supabase
-      if (formData.email === 'admin@hamdan.com' && formData.password === 'admin123') {
-         // Fake admin login for demo without Supabase auth for admin
-         const adminUser: User = {
-            id: 'admin_id',
-            name: 'مدير النظام',
-            email: 'admin@hamdan.com',
-            phone: '0500000000',
-            role: UserRole.ADMIN,
-            avatar: 'https://ui-avatars.com/api/?name=Admin&background=1e3a8a&color=fff'
-         };
-         onLogin(adminUser);
-         navigate('/admin');
-         return;
-      }
-
       const { user, profile } = await dataService.signIn(formData.email, formData.password);
       
       if (user && profile) {

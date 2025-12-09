@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Request, Stats, RequestStatus, User, Agency, Service } from '../types';
+import { Request, Stats, RequestStatus, User, Agency, Service, Message } from '../types';
 import { dataService } from '../services/dataService';
 import { STATUS_COLORS, ICONS } from '../constants';
 import { 
@@ -9,7 +9,6 @@ import {
   FileCheck, 
   AlertCircle, 
   Search, 
-  Filter,
   CheckCircle,
   XCircle,
   Briefcase,
@@ -17,11 +16,11 @@ import {
   Plus,
   Trash2,
   Building2,
-  Settings,
   X,
-  Palette,
-  Layers,
-  Pencil
+  Pencil,
+  MessageSquare,
+  Send,
+  Layers
 } from 'lucide-react';
 
 interface AdminDashboardProps {
@@ -45,6 +44,12 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
   const [isAgencyModalOpen, setIsAgencyModalOpen] = useState(false);
   const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
   
+  // Chat State
+  const [isChatModalOpen, setIsChatModalOpen] = useState(false);
+  const [selectedRequestForChat, setSelectedRequestForChat] = useState<Request | null>(null);
+  const [chatMessages, setChatMessages] = useState<Message[]>([]);
+  const [adminMessage, setAdminMessage] = useState('');
+
   // Edit Mode State
   const [editingAgencyId, setEditingAgencyId] = useState<string | null>(null);
   const [editingServiceId, setEditingServiceId] = useState<string | null>(null);
@@ -92,6 +97,30 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
       await dataService.deleteService(id);
       setServices(services.filter(s => s.id !== id));
     }
+  };
+
+  // --- Chat Handlers ---
+  const openChat = async (req: Request) => {
+    setSelectedRequestForChat(req);
+    setIsChatModalOpen(true);
+    // Fetch messages
+    const msgs = await dataService.getMessages(req.id);
+    setChatMessages(msgs);
+  };
+
+  const handleSendAdminMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!adminMessage.trim() || !selectedRequestForChat) return;
+    
+    const msg = await dataService.sendMessage(
+        selectedRequestForChat.id, 
+        user.id, 
+        user.name, 
+        adminMessage, 
+        true // isAdmin
+    );
+    setChatMessages([...chatMessages, msg]);
+    setAdminMessage('');
   };
 
   // --- Agency Handlers ---
@@ -278,6 +307,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                         </span>
                       </td>
                       <td className="px-6 py-4 flex gap-2">
+                        <button onClick={() => openChat(req)} title="مراسلة العميل" className="p-1 hover:bg-blue-100 text-blue-600 rounded"><MessageSquare size={18} /></button>
                         <button onClick={() => handleStatusChange(req.id, RequestStatus.COMPLETED)} title="إكمال" className="p-1 hover:bg-green-100 text-green-600 rounded"><CheckCircle size={18} /></button>
                         <button onClick={() => handleStatusChange(req.id, RequestStatus.REJECTED)} title="رفض" className="p-1 hover:bg-red-100 text-red-600 rounded"><XCircle size={18} /></button>
                       </td>
@@ -371,6 +401,55 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
       </div>
 
       {/* --- MODALS --- */}
+
+      {/* Chat Modal */}
+      {isChatModalOpen && selectedRequestForChat && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg h-[600px] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
+            {/* Header */}
+            <div className="bg-primary-900 p-4 flex justify-between items-center text-white shrink-0">
+              <div>
+                <h3 className="font-bold text-lg">{selectedRequestForChat.service_title}</h3>
+                <p className="text-xs text-primary-200">{selectedRequestForChat.user_name} - {selectedRequestForChat.tracking_number}</p>
+              </div>
+              <button onClick={() => setIsChatModalOpen(false)} className="text-white/70 hover:text-white transition"><X size={20}/></button>
+            </div>
+            
+            {/* Messages Area */}
+            <div className="flex-1 overflow-y-auto p-4 bg-slate-50 space-y-4">
+               {chatMessages.length === 0 && <p className="text-center text-slate-400 text-sm py-4">لا توجد رسائل سابقة.</p>}
+               {chatMessages.map(msg => (
+                    <div key={msg.id} className={`flex ${msg.is_admin ? 'justify-end' : 'justify-start'}`}>
+                      <div className={`max-w-[80%] rounded-2xl px-4 py-3 shadow-sm ${
+                        msg.is_admin 
+                          ? 'bg-primary-600 text-white rounded-tl-none' 
+                          : 'bg-white text-slate-700 rounded-tr-none border border-slate-200' 
+                      }`}>
+                        <p className="text-sm leading-relaxed">{msg.content}</p>
+                        <div className={`text-[10px] mt-1 flex items-center gap-1 ${msg.is_admin ? 'text-primary-100' : 'text-slate-400'}`}>
+                          <span>{new Date(msg.created_at).toLocaleTimeString('ar-SA', {hour: '2-digit', minute:'2-digit'})}</span>
+                        </div>
+                      </div>
+                    </div>
+                ))}
+            </div>
+
+            {/* Input */}
+            <form onSubmit={handleSendAdminMessage} className="p-4 border-t border-slate-200 bg-white shrink-0 flex gap-2">
+                <input 
+                  type="text" 
+                  value={adminMessage}
+                  onChange={e => setAdminMessage(e.target.value)}
+                  placeholder="اكتب ردك للعميل..." 
+                  className="flex-1 border border-slate-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary-500 outline-none"
+                />
+                <button type="submit" disabled={!adminMessage.trim()} className="bg-primary-900 text-white p-2.5 rounded-lg hover:bg-primary-800 disabled:opacity-50">
+                  <Send size={20} className="rtl:rotate-180" />
+                </button>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Agency Modal (Add / Edit) */}
       {isAgencyModalOpen && (
