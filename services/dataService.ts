@@ -6,29 +6,24 @@ import { AGENCIES, SERVICES, INITIAL_REQUESTS, INITIAL_MESSAGES } from './mockDa
 export const dataService = {
   // --- Authentication ---
   signUp: async (email: string, password: string, name: string, phone: string) => {
+    // نرسل البيانات الإضافية (الاسم، الهاتف) داخل meta_data
+    // ليقوم التريجر في قاعدة البيانات بإنشاء البروفايل تلقائياً
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { name, phone, role: UserRole.CLIENT }
+        data: { 
+          name, 
+          phone, 
+          role: UserRole.CLIENT 
+        }
       }
     });
     
     if (error) throw error;
     
-    // Create profile entry
-    if (data.user) {
-      const { error: profileError } = await supabase.from('profiles').insert([
-        {
-          id: data.user.id,
-          name,
-          phone,
-          role: UserRole.CLIENT,
-          avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=1e3a8a&color=fff`
-        }
-      ]);
-      if (profileError) console.error('Error creating profile:', profileError);
-    }
+    // ملاحظة: تم إزالة كود إنشاء البروفايل اليدوي هنا
+    // لأنه يتم الآن عبر Database Trigger لضمان عدم حدوث مشاكل في الصلاحيات
 
     return data;
   },
