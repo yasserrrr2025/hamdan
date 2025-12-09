@@ -61,18 +61,29 @@ export const dataService = {
   // --- Agencies ---
   getAgencies: async (): Promise<Agency[]> => {
     try {
-      const { data, error } = await supabase.from('agencies').select('*');
+      const { data, error } = await supabase.from('agencies').select('*').order('created_at', { ascending: true });
       if (error) throw error;
       if (!data || data.length === 0) return AGENCIES;
       return data;
     } catch (e: any) {
-      console.warn("Using mock agencies due to DB error or empty table:", e.message || e);
+      console.warn("Using mock agencies fallback:", e.message || e);
       return AGENCIES;
     }
   },
 
   addAgency: async (agency: Omit<Agency, 'id'>) => {
     const { data, error } = await supabase.from('agencies').insert([agency]).select().single();
+    if (error) throw error;
+    return data;
+  },
+
+  updateAgency: async (id: string, agency: Partial<Agency>) => {
+    const { data, error } = await supabase
+      .from('agencies')
+      .update(agency)
+      .eq('id', id)
+      .select()
+      .single();
     if (error) throw error;
     return data;
   },
@@ -94,25 +105,36 @@ export const dataService = {
       if (!data) return [];
       return data;
     } catch (e: any) {
-      console.warn("Using mock services for agency due to DB error:", e.message || e);
+      console.warn("Using mock services fallback:", e.message || e);
       return SERVICES.filter(s => s.agency_id === agencyId);
     }
   },
 
   getAllServices: async (): Promise<Service[]> => {
     try {
-      const { data, error } = await supabase.from('services').select('*');
+      const { data, error } = await supabase.from('services').select('*').order('created_at', { ascending: true });
       if (error) throw error;
       if (!data || data.length === 0) return SERVICES;
       return data;
     } catch (e: any) {
-      console.warn("Using mock services due to DB error:", e.message || e);
+      console.warn("Using mock services fallback:", e.message || e);
       return SERVICES;
     }
   },
 
   addService: async (service: Omit<Service, 'id'>) => {
     const { data, error } = await supabase.from('services').insert([service]).select().single();
+    if (error) throw error;
+    return data;
+  },
+
+  updateService: async (id: string, service: Partial<Service>) => {
+    const { data, error } = await supabase
+      .from('services')
+      .update(service)
+      .eq('id', id)
+      .select()
+      .single();
     if (error) throw error;
     return data;
   },
@@ -127,13 +149,12 @@ export const dataService = {
     try {
       const { data, error } = await supabase
         .from('requests')
-        .select('*, service:services(title), profile:profiles(name)')
+        .select('*, service:services(title)')
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
       
-      // If no data found for this user in DB, and it's the mock user, return mock requests
       if ((!data || data.length === 0) && userId === 'u1') {
          return INITIAL_REQUESTS.filter(r => r.user_id === userId);
       }
@@ -141,7 +162,7 @@ export const dataService = {
       return (data || []).map((item: any) => ({
         ...item,
         service_title: item.service?.title,
-        user_name: item.profile?.name
+        user_name: item.user_name || 'العميل' 
       }));
     } catch (e: any) {
       console.warn('Error fetching user requests, using mock data:', e.message || e);
@@ -153,7 +174,7 @@ export const dataService = {
     try {
       const { data, error } = await supabase
         .from('requests')
-        .select('*, service:services(title), profile:profiles(name)')
+        .select('*, service:services(title)')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -163,7 +184,7 @@ export const dataService = {
       return (data || []).map((item: any) => ({
         ...item,
         service_title: item.service?.title,
-        user_name: item.profile?.name
+        user_name: item.user_name || 'عميل'
       }));
     } catch (e: any) {
       console.warn('Error fetching all requests, using mock data:', e.message || e);
@@ -171,7 +192,7 @@ export const dataService = {
     }
   },
 
-  createRequest: async (userId: string, userName: string, service: Service, notes: string): Promise<Request> => {
+  createRequest: async (userId: string, userName: string, service: Service, notes: string, attachments: Record<string, string> = {}): Promise<Request> => {
     const trackingNumber = `REQ-${new Date().getFullYear()}-${Math.floor(Math.random() * 10000)}`;
     
     try {
@@ -184,6 +205,7 @@ export const dataService = {
             status: RequestStatus.PENDING,
             notes: notes,
             tracking_number: trackingNumber,
+            attachments: attachments,
             updated_at: new Date().toISOString()
           }
         ])
@@ -199,7 +221,6 @@ export const dataService = {
       };
     } catch (e: any) {
       console.error("Error creating request in DB, simulating success:", e.message || e);
-      // Simulate success for demo
       return {
         id: `req_${Date.now()}`,
         tracking_number: trackingNumber,
@@ -210,7 +231,8 @@ export const dataService = {
         status: RequestStatus.PENDING,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-        notes: notes
+        notes: notes,
+        attachments: attachments
       };
     }
   },
@@ -225,7 +247,6 @@ export const dataService = {
       if (error) throw error;
     } catch (e: any) {
       console.warn("Error updating request in DB:", e.message || e);
-      // Ignore error for demo
     }
   },
 
@@ -234,20 +255,19 @@ export const dataService = {
     try {
       const { data, error } = await supabase
         .from('messages')
-        .select('*, profile:profiles(name)')
+        .select('*') 
         .eq('request_id', requestId)
         .order('created_at', { ascending: true });
 
       if (error) throw error;
       
       if (!data || data.length === 0) {
-         // Fallback to mock messages for mock requests
          return INITIAL_MESSAGES.filter(m => m.request_id === requestId);
       }
 
       return (data || []).map((item: any) => ({
         ...item,
-        sender_name: item.profile?.name
+        sender_name: item.sender_name || (item.is_admin ? 'الإدارة' : 'العميل')
       }));
     } catch (e: any) {
       console.warn('Error fetching messages, using mock data:', e.message || e);
@@ -267,7 +287,7 @@ export const dataService = {
             is_admin: isAdmin
           }
         ])
-        .select('*, profile:profiles(name)')
+        .select('*')
         .single();
 
       if (error) throw error;
@@ -311,7 +331,6 @@ export const dataService = {
       };
     } catch (e: any) {
       console.warn('Error fetching stats, using mock data calculation:', e.message || e);
-      // Calculate from mock data
       const requests = INITIAL_REQUESTS;
       const requestsWithPrice = requests.map(r => {
          const s = SERVICES.find(srv => srv.id === r.service_id);

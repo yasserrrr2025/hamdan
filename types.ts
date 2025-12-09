@@ -1,3 +1,4 @@
+
 export enum UserRole {
   CLIENT = 'client',
   ADMIN = 'admin',
@@ -50,6 +51,7 @@ export interface Request {
   updated_at: string;
   assigned_employee_id?: string;
   notes?: string;
+  attachments?: Record<string, string>; // Requirement Name -> File URL/Name
 }
 
 export interface Message {
