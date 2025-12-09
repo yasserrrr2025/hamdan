@@ -2,9 +2,14 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { dataService } from '../services/dataService';
-import { User, Mail, Phone, Lock, ArrowRight, ShieldCheck } from 'lucide-react';
+import { User as UserIcon, Mail, Phone, Lock, ArrowRight, ShieldCheck } from 'lucide-react';
+import { User, UserRole } from '../types';
 
-const Register: React.FC = () => {
+interface RegisterProps {
+  onLogin: (user: User) => void;
+}
+
+const Register: React.FC<RegisterProps> = ({ onLogin }) => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: '',
@@ -31,10 +36,26 @@ const Register: React.FC = () => {
 
     setLoading(true);
     try {
-      await dataService.signUp(formData.email, formData.password, formData.name, formData.phone);
-      // In a real app with email confirmation, you might show a success message here instead of redirecting
-      alert('تم إنشاء الحساب بنجاح! يمكنك تسجيل الدخول الآن.');
-      navigate('/login');
+      const { user, session } = await dataService.signUp(formData.email, formData.password, formData.name, formData.phone);
+      
+      if (user && session) {
+        // تسجيل دخول تلقائي
+        const newUser: User = {
+          id: user.id,
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          role: UserRole.CLIENT,
+          avatar: `https://ui-avatars.com/api/?name=${formData.name}&background=1e3a8a&color=fff`
+        };
+        
+        onLogin(newUser);
+        navigate('/dashboard');
+      } else {
+        // في حال كانت إعدادات Supabase تتطلب تأكيد البريد رغم ذلك
+        alert('تم إنشاء الحساب بنجاح! يرجى تأكيد البريد الإلكتروني ثم تسجيل الدخول.');
+        navigate('/login');
+      }
     } catch (err: any) {
       setError(err.message || 'حدث خطأ أثناء التسجيل');
     } finally {
@@ -76,7 +97,7 @@ const Register: React.FC = () => {
         <div className="w-full max-w-md">
           <div className="text-center mb-10">
             <h2 className="text-3xl font-bold text-slate-800 mb-2">إنشاء حساب جديد</h2>
-            <p className="text-slate-500">أدخل بياناتك لإنشاء حساب العميل</p>
+            <p className="text-slate-500">أدخل بياناتك للدخول المباشر</p>
           </div>
 
           {error && (
@@ -87,7 +108,7 @@ const Register: React.FC = () => {
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="relative">
-              <User className="absolute top-3.5 right-4 text-slate-400" size={20} />
+              <UserIcon className="absolute top-3.5 right-4 text-slate-400" size={20} />
               <input
                 type="text"
                 name="name"
@@ -153,7 +174,7 @@ const Register: React.FC = () => {
               disabled={loading}
               className="w-full bg-primary-900 text-white py-4 rounded-xl font-bold text-lg hover:bg-primary-800 transition shadow-lg shadow-primary-900/20 flex items-center justify-center gap-2"
             >
-              {loading ? 'جاري الإنشاء...' : 'تسجيل الحساب'}
+              {loading ? 'جاري إنشاء الحساب...' : 'تسجيل ودخول'}
               {!loading && <ArrowRight size={20} className="rtl:rotate-180" />}
             </button>
           </form>

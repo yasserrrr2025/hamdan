@@ -46,7 +46,7 @@ const AppContent: React.FC = () => {
           <Routes>
             <Route path="/" element={<Home />} />
             
-            <Route path="/register" element={<Register />} />
+            <Route path="/register" element={<Register onLogin={handleLogin} />} />
             <Route path="/login" element={<Login onLogin={handleLogin} />} />
 
             {/* Protected Client Routes */}
